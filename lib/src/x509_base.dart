@@ -206,8 +206,44 @@ String _getPEMFromBytes(List<int> bytes, String type) {
   return buffer.toString();
 }
 
+enum PemType {
+  publicKey,
+  rsaPublicKey,
+  privateKey,
+  rsaPrivateKey,
+  ecPrivateKey,
+  encryptedPrivateKey,
+  certificate,
+  certificateRequest,
+}
+extension PemTypeName on PemType {
+  String toPemName() {
+    switch (this) {
+      case PemType.publicKey:
+        return 'PUBLIC KEY';
+      case PemType.rsaPublicKey:
+        return 'RSA PUBLIC KEY';
+      case PemType.privateKey:
+        return 'PRIVATE KEY';
+      case PemType.rsaPrivateKey:
+        return 'RSA PRIVATE KEY';
+      case PemType.ecPrivateKey:
+        return 'EC PRIVATE KEY';
+      case PemType.encryptedPrivateKey:
+        return 'ENCRYPTED PRIVATE KEY';
+      case PemType.certificate:
+        return 'CERTIFICATE';
+      case PemType.certificateRequest:
+        return 'CERTIFICATE REQUEST';
+    }
+  }
+}
+
+String asn1ToPem(ASN1Sequence asn1, PemType type) {
+  return _getPEMFromBytes(asn1.encodedBytes, type.toPemName());
+}
 String toPem(SubjectPublicKeyInfo key) {
-  return _getPEMFromBytes(key.toAsn1().encodedBytes, 'PUBLIC KEY');
+  return asn1ToPem(key.toAsn1(), PemType.publicKey);
 }
 
 Object _parseDer(List<int> bytes, String? type) {

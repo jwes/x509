@@ -1,3 +1,5 @@
+## 0.2.4+3
+ - **FEAT** let any ASN1 object be exported by asn1ToPem
 ## 0.2.4+2
 
  - **DOCS**: fix code sample (pull request [#29](https://github.com/appsup-dart/x509/issues/29) from bivens-dev/patch-1). ([14a3a777](https://github.com/appsup-dart/x509/commit/14a3a777afae604e293ee18eb34629c3ef875862))
