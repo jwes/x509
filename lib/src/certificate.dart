@@ -74,7 +74,7 @@ class X509Certificate implements Certificate {
       Uint8List signature = Uint8List.fromList(rb+sb);
       return Signature(signature);
     } else {
-      throw UnimplementedError('Unknown algorithm ${signatureAlgorithm.algorithm}');
+      return Signature(Uint8List.fromList(signatureValue!));
     }
   }
 }

@@ -134,6 +134,16 @@ class ObjectIdentifier {
                 6: 'prime239v3',
                 7: 'prime256v1',
               }
+            },
+            4: {
+              null: 'signatures',
+              3: {
+                null: 'ecdsa-with-SHA2',
+                1: 'ecdsa-with-SHA224',
+                2: 'ecdsa-with-SHA256',
+                3: 'ecdsa-with-SHA385',
+                4: 'ecdsa-with-SHA512',
+              }
             }
           },
           113549: {
