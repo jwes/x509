@@ -281,23 +281,24 @@ Object _parseDer(List<int> bytes, String? type) {
   }
   throw FormatException('Could not parse PEM');
 }
-
-Iterable parsePem(String pem) sync* {
+final _beginMarker = RegExp(r'^-----BEGIN (.+)-----$');
+Iterable<(Uint8List, String)> pemToDer(String pem) sync* {
   var lines = pem
       .split('\n')
       .map((line) => line.trim())
       .where((line) => line.isNotEmpty)
       .toList();
-
-  final re = RegExp(r'^-----BEGIN (.+)-----$');
   for (var i = 0; i < lines.length; i++) {
     var l = lines[i];
-    var match = re.firstMatch(l);
+    var match = _beginMarker.firstMatch(l);
     if (match == null) {
       throw ArgumentError('The given string does not have the correct '
           'begin marker expected in a PEM file.');
     }
     var type = match.group(1);
+    if (type == null) {
+      throw ArgumentError('Invalid type');
+    }
 
     var startI = ++i;
     while (i < lines.length && lines[i] != '-----END $type-----') {
@@ -310,6 +311,13 @@ Iterable parsePem(String pem) sync* {
 
     var b = lines.sublist(startI, i).join('');
     var bytes = base64.decode(b);
-    yield _parseDer(bytes, type);
+    yield (bytes, type);
+  }
+}
+
+/// parses a pem file returning a list of decoded objects
+Iterable parsePem(String pem) sync* {
+  for (var ret in pemToDer(pem)) {
+    yield _parseDer(ret.$1, ret.$2);
   }
 }

@@ -56,6 +56,27 @@ class X509Certificate implements Certificate {
     buffer.writeln(toHexString(toBigInt(signatureValue!), '$prefix\t\t', 18));
     return buffer.toString();
   }
+  /// return a signature from signatureValue
+  Signature get signature {
+    String name = signatureAlgorithm.algorithm.name;
+    if (name.startsWith("ecdsa")) {
+      var sig = ASN1Sequence.fromBytes(Uint8List.fromList(signatureValue!)); // x509 DER
+      var r = (sig.elements[0] as ASN1Integer);
+      var rb = r.valueBytes();
+      if (rb[0] == 0) {
+        rb = rb.sublist(1);
+      }
+      var s = (sig.elements[1] as ASN1Integer);
+      var sb = s.valueBytes();
+      if (sb[0] == 0) {
+        sb = sb.sublist(1);
+      }
+      Uint8List signature = Uint8List.fromList(rb+sb);
+      return Signature(signature);
+    } else {
+      throw UnimplementedError('Unknown algorithm ${signatureAlgorithm.algorithm}');
+    }
+  }
 }
 
 /// An unsigned (To-Be-Signed) certificate.
