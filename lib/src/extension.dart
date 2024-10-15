@@ -53,6 +53,16 @@ class Extension {
     return Extension(extnId: id, isCritical: critical, extnValue: value);
   }
 
+  ASN1Sequence toAsn1() {
+   var seq = ASN1Sequence();
+   seq.add(fromDart(extnId));
+   if (isCritical) {
+    seq.add(fromDart(isCritical));
+   }
+   seq.add(extnValue.toAsn1(extnId));
+   return seq;
+  }
+
   @override
   String toString([String prefix = '']) {
     var buffer = StringBuffer();
@@ -60,6 +70,7 @@ class Extension {
     buffer.writeln('$prefix\t$extnValue');
     return buffer.toString();
   }
+
 }
 
 /// The base class for extension values.
@@ -120,6 +131,10 @@ abstract class ExtensionValue {
       }
     }
     return UnknownExtension(obj, id);
+  }
+
+  ASN1Object toAsn1(ObjectIdentifier) {
+    return ASN1Null();
   }
 }
 

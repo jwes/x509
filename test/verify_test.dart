@@ -35,6 +35,21 @@ void main() {
     var verifier = ca.publicKey.createVerifier(x509.algorithms.signing.ecdsa.sha256);
 
     final bytes = (seq.elements[0] as ASN1Sequence).encodedBytes;
+    print('pem    ${bytes.length} ${bytes.sublist(0, 40).map((e) => e.toRadixString(16)).join(', ')}');
+    expect(verifier.verify(bytes, toCheck.signature), true);
+  });
+
+  test('test verify a single parsed cert', () async {
+    var caPem = await File("test/resources/ec.ca.cert.pem").readAsString();
+    var toCheckPem = await File("test/resources/ec.toCheck.cert.pem").readAsString();
+
+    var ca = x509.parsePem(caPem).single as x509.X509Certificate;
+    var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
+    final all = toCheck.toAsn1().encodedBytes;
+    print('all    ${all.length}   ${all.sublist(0, 40).map((e) => e.toRadixString(16)).join(', ')}');
+    final bytes = toCheck.tbsCertificate.toAsn1().encodedBytes;
+    print('bytes ${bytes.length}  ${bytes.sublist(0, 40).map((e) => e.toRadixString(16)).join(', ')}');
+    var verifier = ca.publicKey.createVerifier(x509.algorithms.signing.ecdsa.sha256);
     expect(verifier.verify(bytes, toCheck.signature), true);
   });
 }

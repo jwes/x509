@@ -58,9 +58,9 @@ class X509Certificate implements Certificate {
   }
   /// return a signature from signatureValue
   Signature get signature {
-    String name = signatureAlgorithm.algorithm.name;
-    if (name.startsWith("ecdsa")) {
-      var sig = ASN1Sequence.fromBytes(Uint8List.fromList(signatureValue!)); // x509 DER
+    ObjectIdentifier name = signatureAlgorithm.algorithm;
+    if (name.parent == ObjectIdentifier([1,2,840,10045,4,3])) { // ECDSA with SHA*
+      var sig = ASN1Sequence.fromBytes(Uint8List.fromList(signatureValue!)); // x509 DER of r + s
       var r = (sig.elements[0] as ASN1Integer);
       var rb = r.valueBytes();
       if (rb[0] == 0) {
@@ -166,16 +166,20 @@ class TbsCertificate {
         // context
         switch (o.tag & 0x1f) {
           case 1:
+            print ('iuid ${o.tag}');
             iUid = o.contentBytes();
             break;
           case 2:
+            print ('suid ${o.tag}');
             sUid = o.contentBytes();
             break;
           case 3:
+            print ('ex ${o.tag}');
             ex = (ASN1Parser(o.contentBytes()).nextObject() as ASN1Sequence)
                 .elements
                 .map((v) => Extension.fromAsn1(v as ASN1Sequence))
                 .toList();
+            break;
         }
       }
     }
@@ -215,9 +219,19 @@ class TbsCertificate {
       ..add(subjectPublicKeyInfo!.toAsn1());
     if (version! > 1) {
       if (issuerUniqueID != null) {
-        // TODO
-        // var iuid = ASN1BitString.fromBytes(issuerUniqueID);
-        //ASN1Object.preEncoded(tag, valBytes)
+        var iuid = ASN1BitString.fromBytes(Uint8List.fromList(issuerUniqueID!));
+        seq.add(ASN1Object.preEncoded(0x1f | 1<<6, iuid.encodedBytes));
+      }
+      if (subjectUniqueID != null) {
+        var suid = ASN1BitString.fromBytes(Uint8List.fromList(subjectUniqueID!));
+        seq.add(ASN1Object.preEncoded(0x1f | 2 << 6, suid.encodedBytes));
+      }
+      if (extensions != null) {
+        var exSeq = ASN1Sequence();
+        for (var ex in extensions!) {
+          exSeq.add(ex.toAsn1());
+        }
+        seq.add(exSeq);
       }
     }
     return seq;
