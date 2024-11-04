@@ -103,31 +103,45 @@ class SubjectPublicKeyInfo {
   factory SubjectPublicKeyInfo.fromAsn1(ASN1Sequence sequence) {
     final algorithm =
         AlgorithmIdentifier.fromAsn1(sequence.elements[0] as ASN1Sequence);
-    return SubjectPublicKeyInfo(algorithm,
+    if (algorithm.toAsn1() != sequence.elements[0]) {
+      print("algorithm");
+      print (algorithm.toAsn1().encodedBytes.toList().map((e) => e.toRadixString(16)));
+      print (sequence.elements[0].encodedBytes.toList().map((e) => e.toRadixString(16)));
+    }
+    var spki = SubjectPublicKeyInfo(algorithm,
         publicKeyFromAsn1(sequence.elements[1] as ASN1BitString, algorithm));
+
+    if (keyToAsn1(spki.subjectPublicKey) != sequence.elements[1]) {
+      print("spk");
+      print (keyToAsn1(spki.subjectPublicKey).encodedBytes.toList().map((e) => e.toRadixString(16)));
+      print (sequence.elements[1].encodedBytes.toList().map((e) => e.toRadixString(16)));
+    }
+    return spki;
   }
 
   @override
   String toString([String prefix = '']) {
     var buffer = StringBuffer();
     buffer.writeln('${prefix}Public Key Algorithm: $algorithm');
-    buffer.writeln('${prefix}RSA Public Key:');
+    buffer.writeln('${prefix}Public Key:');
     buffer.writeln(keyToString(subjectPublicKey, '$prefix\t'));
     return buffer.toString();
   }
 
   ASN1Sequence toAsn1() {
-    return ASN1Sequence()
-      ..add(algorithm.toAsn1())
-      ..add(keyToAsn1(subjectPublicKey));
+    var seq = ASN1Sequence();
+    seq.add(algorithm.toAsn1());
+    seq.add(keyToAsn1(subjectPublicKey));
+    return seq;
   }
 }
 
 class AlgorithmIdentifier {
   final ObjectIdentifier algorithm;
   final dynamic parameters;
+  ASN1Sequence? base; // TODO: parameters?
 
-  AlgorithmIdentifier(this.algorithm, this.parameters);
+  AlgorithmIdentifier(this.algorithm, this.parameters, {this.base});
 
   /// AlgorithmIdentifier  ::=  SEQUENCE  {
   ///   algorithm               OBJECT IDENTIFIER,
@@ -139,12 +153,17 @@ class AlgorithmIdentifier {
     var algorithm = toDart(sequence.elements[0]);
     var parameters =
         sequence.elements.length > 1 ? toDart(sequence.elements[1]) : null;
-    return AlgorithmIdentifier(algorithm, parameters);
+    return AlgorithmIdentifier(algorithm, parameters, base: sequence);
   }
 
   ASN1Sequence toAsn1() {
+    if (base != null) {
+      return base!;
+    }
     var seq = ASN1Sequence()..add(fromDart(algorithm));
-    seq.add(fromDart(parameters));
+    if (parameters != null) {
+      seq.add(fromDart(parameters));
+    }
     return seq;
   }
 

@@ -1,10 +1,31 @@
 library x509.conversions;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:asn1lib/asn1lib.dart';
 
 import '../x509.dart';
+
+class TypedString {
+  final String data;
+  final int asn1Type;
+  const TypedString(this.data, this.asn1Type);
+
+  @override
+  String toString() {
+    return data;
+  }
+  ASN1Object toAsn1() {
+    if (asn1Type == UTF8_STRING_TYPE) {
+      return ASN1UTF8String(data);
+    } else if (asn1Type == PRINTABLE_STRING_TYPE){
+      return ASN1PrintableString(data);
+    } else {
+      throw Exception('unknown type ${asn1Type.toRadixString(16)}');
+    }
+  }
+}
 
 ObjectIdentifier? _ecParametersFromAsn1(ASN1Object object) {
   // https://tools.ietf.org/html/rfc5480#section-2.1.1
@@ -174,12 +195,28 @@ String keyToString(Key key, [String prefix = '']) {
   return '$prefix$key';
 }
 
+void _addBigIntToList(BigInt bInt, List<int> list) {
+  var bIntList = ASN1Integer.encodeBigInt(bInt);
+
+  if (bIntList.first == 0) {
+    list.addAll(Uint8List.fromList(bIntList.sublist(1)));
+  } else {
+    list.addAll(Uint8List.fromList(bIntList));
+  }
+}
+
 ASN1BitString keyToAsn1(Key key) {
   var s = ASN1Sequence();
   if (key is RsaPublicKey) {
     s
       ..add(ASN1Integer(key.modulus))
       ..add(ASN1Integer(key.exponent));
+  } else if (key is EcPublicKey) {
+    var list = <int>[];
+    list.add(4); //uncompressed
+    _addBigIntToList(key.xCoordinate, list);
+    _addBigIntToList(key.yCoordinate, list);
+    return ASN1BitString(Uint8List.fromList(list));
   }
   return ASN1BitString(s.encodedBytes);
 }
@@ -230,7 +267,8 @@ ASN1Object fromDart(dynamic obj) {
   if (obj is int) return ASN1Integer(BigInt.from(obj));
   if (obj is ObjectIdentifier) return obj.toAsn1();
   if (obj is bool) return ASN1Boolean(obj);
-  if (obj is String) return ASN1PrintableString(obj);
+  if (obj is String) return ASN1UTF8String(obj);
+  if (obj is TypedString) return obj.toAsn1();
   if (obj is DateTime) return ASN1UtcTime(obj);
 
   throw ArgumentError.value(obj, 'obj', 'cannot be encoded as ASN1Object');
@@ -245,11 +283,15 @@ dynamic toDart(ASN1Object obj) {
   if (obj is ASN1BitString) return obj.stringValue;
   if (obj is ASN1Boolean) return obj.booleanValue;
   if (obj is ASN1OctetString) return obj.stringValue;
-  if (obj is ASN1PrintableString) return obj.stringValue;
+  if (obj is ASN1PrintableString) {
+    return TypedString(obj.stringValue, PRINTABLE_STRING_TYPE);
+  }
   if (obj is ASN1UtcTime) return obj.dateTimeValue;
   if (obj is ASN1GeneralizedTime) return obj.dateTimeValue;
   if (obj is ASN1IA5String) return obj.stringValue;
-  if (obj is ASN1UTF8String) return obj.utf8StringValue;
+  if (obj is ASN1UTF8String) {
+    return TypedString(obj.utf8StringValue, UTF8_STRING_TYPE);
+  }
 
   // ASN.1 Identifier format is below:
   // | 7 | 6 |  5  | 4| 3| 2|1|0|

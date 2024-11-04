@@ -16,9 +16,14 @@ class Extension {
 
   /// The extension's value.
   final ExtensionValue extnValue;
+  ASN1Sequence? _backup;
 
-  const Extension(
-      {required this.extnId, this.isCritical = false, required this.extnValue});
+  Extension({
+        required this.extnId,
+        this.isCritical = false,
+        required this.extnValue,
+        ASN1Sequence? backup})
+    : _backup = backup;
 
   /// Creates a Extension from an [ASN1Sequence].
   ///
@@ -40,7 +45,6 @@ class Extension {
       critical = toDart(sequence.elements[1]);
       octetIndex = 2;
     }
-
     var value = ExtensionValue.fromAsn1(
       ASN1Parser(sequence.elements[octetIndex].contentBytes()).nextObject(),
       id,
@@ -49,18 +53,19 @@ class Extension {
       throw UnimplementedError(
           'Cannot handle critical extension $id (${id.parent} ${id.nodes.last})');
     }
-
-    return Extension(extnId: id, isCritical: critical, extnValue: value);
+    return Extension(extnId: id, isCritical: critical, extnValue: value, backup: sequence);
   }
 
   ASN1Sequence toAsn1() {
-   var seq = ASN1Sequence();
-   seq.add(fromDart(extnId));
-   if (isCritical) {
-    seq.add(fromDart(isCritical));
-   }
-   seq.add(extnValue.toAsn1(extnId));
-   return seq;
+    if (_backup != null) {
+      return _backup!;
+    }
+    var seq = ASN1Sequence();
+    seq.add(fromDart(extnId));
+    if (isCritical) {
+      seq.add(fromDart(isCritical));
+    }
+    return seq;
   }
 
   @override
@@ -132,10 +137,6 @@ abstract class ExtensionValue {
     }
     return UnknownExtension(obj, id);
   }
-
-  ASN1Object toAsn1(ObjectIdentifier) {
-    return ASN1Null();
-  }
 }
 
 /// An authority key identifier extension value.
@@ -173,9 +174,12 @@ class AuthorityKeyIdentifier extends ExtensionValue {
           issuer = GeneralNames.fromAsn1(o);
           break;
         case 2:
+          var old = o.encodedBytes[0];
           number =
               (ASN1Parser(o.encodedBytes..[0] = 2).nextObject() as ASN1Integer)
                   .valueAsBigInteger;
+          o.encodedBytes[0] = old;
+
       }
     }
     return AuthorityKeyIdentifier(keyId, issuer, number);

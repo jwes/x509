@@ -166,15 +166,12 @@ class TbsCertificate {
         // context
         switch (o.tag & 0x1f) {
           case 1:
-            print ('iuid ${o.tag}');
             iUid = o.contentBytes();
             break;
           case 2:
-            print ('suid ${o.tag}');
             sUid = o.contentBytes();
             break;
           case 3:
-            print ('ex ${o.tag}');
             ex = (ASN1Parser(o.contentBytes()).nextObject() as ASN1Sequence)
                 .elements
                 .map((v) => Extension.fromAsn1(v as ASN1Sequence))
@@ -220,7 +217,7 @@ class TbsCertificate {
     if (version! > 1) {
       if (issuerUniqueID != null) {
         var iuid = ASN1BitString.fromBytes(Uint8List.fromList(issuerUniqueID!));
-        seq.add(ASN1Object.preEncoded(0x1f | 1<<6, iuid.encodedBytes));
+        seq.add(ASN1Object.preEncoded(0x1f | 1 << 6, iuid.encodedBytes));
       }
       if (subjectUniqueID != null) {
         var suid = ASN1BitString.fromBytes(Uint8List.fromList(subjectUniqueID!));
@@ -231,7 +228,7 @@ class TbsCertificate {
         for (var ex in extensions!) {
           exSeq.add(ex.toAsn1());
         }
-        seq.add(exSeq);
+        seq.add(ASN1Object.preEncoded(0xa3, exSeq.encodedBytes));
       }
     }
     return seq;
