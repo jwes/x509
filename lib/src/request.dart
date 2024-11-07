@@ -19,14 +19,14 @@ class CertificationRequest {
     return CertificationRequest(
         CertificationRequestInfo.fromAsn1(sequence.elements[0] as ASN1Sequence),
         algorithm,
-        (sequence.elements[2] as ASN1BitString).contentBytes());
+        toDart(sequence.elements[2]));
   }
 
   ASN1Sequence toAsn1() {
     return ASN1Sequence()
         ..add(certificationRequestInfo.toAsn1())
         ..add(signatureAlgorithm.toAsn1())
-        ..add(ASN1BitString.fromBytes(signature));
+        ..add(fromDart(signature));
   }
 }
 
@@ -55,7 +55,7 @@ class CertificationRequestInfo {
 
   ASN1Sequence toAsn1() {
     return ASN1Sequence()
-        ..add(fromDart(version))
+        ..add(fromDart((version ?? 1) - 1))
         ..add(subject.toAsn1())
         ..add(subjectPublicKeyInfo.toAsn1())
         ..add(attributes);
