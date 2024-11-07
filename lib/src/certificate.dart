@@ -77,6 +77,44 @@ class X509Certificate implements Certificate {
       return Signature(Uint8List.fromList(signatureValue!));
     }
   }
+
+  bool verify(PublicKey publicKey, {bool checkDates=true}) {
+    if(checkDates) {
+      var validity = tbsCertificate.validity;
+      if (validity?.notAfter.isBefore(DateTime.now()) == true) {
+        return false;
+      }
+      if (validity?.notBefore.isAfter(DateTime.now()) == true) {
+        return false;
+      }
+    }
+    final bytes = tbsCertificate.toAsn1().encodedBytes;
+    // signatureAlgorithm.algorithm.parent
+    final name = signatureAlgorithm.algorithm.name;
+    Identifier algo = _algorithmFromName(name);
+    final verifier = publicKey.createVerifier(algo);
+    return verifier.verify(bytes, signature);
+  }
+}
+
+/// try to get the Identifier from the given name
+/// throws an Exception if name did not match a supported algorithm
+Identifier _algorithmFromName(String name) {
+  switch (name) {
+    case 'ecdsa-with-SHA256':
+      return algorithms.signing.ecdsa.sha256;
+    case 'ecdsa-with-SHA384':
+      return algorithms.signing.ecdsa.sha384;
+    case 'ecdsa-with-SHA512':
+      return algorithms.signing.ecdsa.sha512;
+    case 'sha256WithRSAEncryption':
+      return algorithms.signing.rsa.sha256;
+    case 'sha384WithRSAEncryption':
+      return algorithms.signing.rsa.sha384;
+    case 'sha512WithRSAEncryption':
+    default:
+      throw Exception('unsupported signature algorithm $name');
+  }
 }
 
 /// An unsigned (To-Be-Signed) certificate.

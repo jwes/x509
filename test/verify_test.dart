@@ -6,8 +6,8 @@ import 'package:x509/x509.dart' as x509;
 void main() {
   test('test verify a single rsa cert from pem', () async {
     /// this is currently the only way that works
-    var caPem = await File("test/resources/rsa.ca.cert.pem").readAsString();
-    var toCheckPem = await File("test/resources/rsa.toCheck.cert.pem").readAsString();
+    var caPem = await File('test/resources/rsa.ca.cert.pem').readAsString();
+    var toCheckPem = await File('test/resources/rsa.toCheck.cert.pem').readAsString();
 
     var ca = x509.parsePem(caPem).single as x509.X509Certificate;
     var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
@@ -22,8 +22,8 @@ void main() {
   });
   test('test verify a single ec cert from pem', () async {
     /// this is currently the only way that works
-    var caPem = await File("test/resources/ec.ca.cert.pem").readAsString();
-    var toCheckPem = await File("test/resources/ec.toCheck.cert.pem").readAsString();
+    var caPem = await File('test/resources/ec.ca.cert.pem').readAsString();
+    var toCheckPem = await File('test/resources/ec.toCheck.cert.pem').readAsString();
     
     var ca = x509.parsePem(caPem).single as x509.X509Certificate;
     var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
@@ -37,15 +37,20 @@ void main() {
     expect(verifier.verify(bytes, toCheck.signature), true);
   });
 
-  test('test verify a single parsed cert', () async {
-    var caPem = await File("test/resources/ec.ca.cert.pem").readAsString();
-    var toCheckPem = await File("test/resources/ec.toCheck.cert.pem").readAsString();
+  test('test verify a single parsed rsa cert', () async {
+    var caPem = await File('test/resources/rsa.ca.cert.pem').readAsString();
+    var toCheckPem = await File('test/resources/rsa.toCheck.cert.pem').readAsString();
 
     var ca = x509.parsePem(caPem).single as x509.X509Certificate;
     var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
-    final bytes = toCheck.tbsCertificate.toAsn1().encodedBytes;
+    expect(toCheck.verify(ca.publicKey), true);
+  });
+  test('test verify a single parsed ec cert', () async {
+    var caPem = await File('test/resources/ec.ca.cert.pem').readAsString();
+    var toCheckPem = await File('test/resources/ec.toCheck.cert.pem').readAsString();
 
-    var verifier = ca.publicKey.createVerifier(x509.algorithms.signing.ecdsa.sha256);
-    expect(verifier.verify(bytes, toCheck.signature), true);
+    var ca = x509.parsePem(caPem).single as x509.X509Certificate;
+    var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
+    expect(toCheck.verify(ca.publicKey), true);
   });
 }

@@ -1,3 +1,5 @@
+## 0.3.0
+ - **FEAT** add verify capability to certificate
 ## 0.2.4+3
  - **FEAT** let any ASN1 object be exported by asn1ToPem
 ## 0.2.4+2

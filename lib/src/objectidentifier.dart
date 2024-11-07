@@ -141,7 +141,7 @@ class ObjectIdentifier {
                 null: 'ecdsa-with-SHA2',
                 1: 'ecdsa-with-SHA224',
                 2: 'ecdsa-with-SHA256',
-                3: 'ecdsa-with-SHA385',
+                3: 'ecdsa-with-SHA384',
                 4: 'ecdsa-with-SHA512',
               }
             }
