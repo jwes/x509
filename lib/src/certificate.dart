@@ -112,6 +112,7 @@ Identifier _algorithmFromName(String name) {
     case 'sha384WithRSAEncryption':
       return algorithms.signing.rsa.sha384;
     case 'sha512WithRSAEncryption':
+      return algorithms.signing.rsa.sha512;
     default:
       throw Exception('unsupported signature algorithm $name');
   }

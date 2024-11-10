@@ -53,4 +53,11 @@ void main() {
     var toCheck = x509.parsePem(toCheckPem).single as x509.X509Certificate;
     expect(toCheck.verify(ca.publicKey), true);
   });
-}
+  test('test verify a single parsed ed448 cert', () async {
+    var caPem = await File('test/resources/ed448.ca.cert.pem').readAsString();
+    var toCheckPem = await File('test/resources/ed448.toCheck.cert.pem').readAsString();
+
+    // publicKey will not be accepted
+    expect(() => x509.parsePem(caPem).single, throwsA(isA<UnimplementedError>()));
+    expect(() => x509.parsePem(toCheckPem).single, throwsA(isA<UnimplementedError>()));
+  });}

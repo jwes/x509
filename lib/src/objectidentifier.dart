@@ -394,6 +394,15 @@ class ObjectIdentifier {
             }
           }
         },
+        101: {
+          null: 'thawte',
+          110: 'id-X25519',
+          111: 'id-X448',
+          112: 'id-Ed25519',
+          113: 'id-Ed448',
+          114: 'id-EdDSA25519-ph',
+          115: 'id-EdDS448-ph',
+        },
         132: {
           null: 'certicom',
           0: {

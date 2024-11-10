@@ -180,7 +180,7 @@ PublicKey publicKeyFromAsn1(ASN1BitString data, AlgorithmIdentifier algorithm) {
           curve: _curveObjectIdentifierToIdentifier(algorithm.parameters));
     case 'sha1WithRSAEncryption':
   }
-  throw UnimplementedError('Unknown algoritmh $algorithm');
+  throw UnimplementedError('Unknown algorithm $algorithm');
 }
 
 String keyToString(Key key, [String prefix = '']) {
